@@ -1,0 +1,1501 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shodan Data Explorer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #14b8a6;
+            --text: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --border: #334155;
+            --card: #1e293b;
+            --card-hover: #2d3748;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.8rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--surface);
+            transform: none;
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            gap: 1.5rem;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            background-color: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: fit-content;
+            border: 1px solid var(--border);
+        }
+
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.7rem 0.8rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: var(--card-hover);
+        }
+
+        .nav-item.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.9rem;
+            color: var(--success);
+        }
+
+        .card-trend.down {
+            color: var(--danger);
+        }
+
+        /* Data Section */
+        .data-section {
+            background-color: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+            min-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem 0.75rem 40px;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filter-select {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            color: var(--text);
+            font-size: 0.95rem;
+            min-width: 160px;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .data-table th {
+            background-color: var(--card);
+            color: var(--text-secondary);
+            text-align: left;
+            padding: 1rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background-color: var(--card-hover);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-open {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-vulnerable {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .status-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background-color: var(--background);
+            color: var(--text-secondary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .action-btn:hover {
+            background-color: var(--background);
+            color: var(--text);
+        }
+
+        /* File Upload */
+        .file-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+
+        .file-upload-icon {
+            font-size: 3rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-text {
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-hint {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+
+        /* Detail View */
+        .detail-view {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100vh;
+            background-color: var(--surface);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+            z-index: 200;
+            padding: 1.5rem;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .detail-view.active {
+            transform: translateX(0);
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .detail-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 0.8rem;
+        }
+
+        .detail-label {
+            width: 160px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            flex: 1;
+        }
+
+        .close-detail {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .close-detail:hover {
+            color: var(--text);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+
+            .detail-view {
+                width: 70%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .detail-view {
+                width: 85%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-actions .btn-text {
+                display: none;
+            }
+
+            .detail-view {
+                width: 100%;
+            }
+        }
+
+        /* Loader */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loader-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--border);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-radar"></i>
+            </div>
+            <div class="logo-text">Shodan Explorer</div>
+        </div>
+        <div class="header-actions">
+            <button class="btn">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span class="btn-text">Upload Data</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Data Filters</div>
+
+                <div class="form-group">
+                    <label>IP Address</label>
+                    <input type="text" class="filter-input" id="filter-ip" placeholder="192.168.1.1">
+                </div>
+
+                <div class="form-group">
+                    <label>Port</label>
+                    <input type="number" class="filter-input" id="filter-port" placeholder="80">
+                </div>
+
+                <div class="form-group">
+                    <label>Product</label>
+                    <input type="text" class="filter-input" id="filter-product" placeholder="Apache">
+                </div>
+
+                <div class="form-group">
+                    <label>Vulnerability</label>
+                    <input type="text" class="filter-input" id="filter-vuln" placeholder="CVE-">
+                </div>
+
+                <div class="form-group">
+                    <label>Country</label>
+                    <select class="filter-select" id="filter-country">
+                        <option value="">All Countries</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" class="filter-input" id="filter-city" placeholder="New York">
+                </div>
+
+                <button class="btn" id="apply-filters" style="margin-top: 1rem; width: 100%;">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+                <button class="btn btn-outline" id="reset-filters" style="margin-top: 0.5rem; width: 100%;">
+                    <i class="fas fa-redo"></i> Reset Filters
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Data Insights</div>
+                <div class="insight">
+                    <i class="fas fa-circle" style="color: var(--success);"></i>
+                    <span>HTTP Services: <span id="insight-http">0</span></span>
+                </div>
+                <div class="insight">
+                    <i class="fas fa-circle" style="color: var(--warning);"></i>
+                    <span>SSL/TLS Services: <span id="insight-ssl">0</span></span>
+                </div>
+                <div class="insight">
+                    <i class="fas fa-circle" style="color: var(--danger);"></i>
+                    <span>Vulnerable Services: <span id="insight-vuln">0</span></span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Quick Actions</div>
+                <button class="btn btn-outline" id="export-csv" style="width: 100%; margin-bottom: 0.5rem;">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+                <button class="btn btn-outline" id="export-json" style="width: 100%;">
+                    <i class="fas fa-file-code"></i> Export JSON
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="card-title">Total Hosts</div>
+                    <div class="card-value" id="card-hosts">0</div>
+                    <div class="card-trend">
+                        <i class="fas fa-database"></i> Shodan Data Explorer
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <div class="card-title">Open Ports</div>
+                    <div class="card-value" id="card-ports">0</div>
+                    <div class="card-trend">
+                        <i class="fas fa-network-wired"></i> Unique ports
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-bug"></i>
+                    </div>
+                    <div class="card-title">Vulnerabilities</div>
+                    <div class="card-value" id="card-vulns">0</div>
+                    <div class="card-trend down">
+                        <i class="fas fa-shield-alt"></i> Detected issues
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-globe-americas"></i>
+                    </div>
+                    <div class="card-title">Countries</div>
+                    <div class="card-value" id="card-countries">0</div>
+                    <div class="card-trend">
+                        <i class="fas fa-flag"></i> Geographic spread
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <div class="section-header">
+                    <h2 class="section-title">Shodan Scan Results</h2>
+                    <div class="file-upload-area" id="dropZone">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3 class="file-upload-text">Upload Shodan JSON Files</h3>
+                        <p class="file-upload-hint">Drag & drop files here or click to browse</p>
+                        <input type="file" id="fileInput" multiple accept=".json" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="filters">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="global-search" placeholder="Search hosts, services, vulnerabilities...">
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="loader" id="loader">
+                        <div class="loader-spinner"></div>
+                        <p>Processing Shodan data...</p>
+                    </div>
+
+                    <div class="no-data" id="no-data">
+                        <i class="fas fa-database"></i>
+                        <h3>No Shodan Data Loaded</h3>
+                        <p>Upload JSON files generated by the Shodan CLI to begin analysis</p>
+                    </div>
+
+                    <table class="data-table" id="results-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Host</th>
+                                <th>Service</th>
+                                <th>Location</th>
+                                <th>Product</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            <!-- Results will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="detail-view" id="detail-view">
+        <div class="detail-header">
+            <h2>Host Details</h2>
+            <button class="close-detail" id="close-detail">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="detail-content">
+            <div class="detail-section">
+                <h3><i class="fas fa-desktop"></i> Host Information</h3>
+                <div class="detail-row">
+                    <div class="detail-label">IP Address:</div>
+                    <div class="detail-value" id="detail-ip">192.168.1.1</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Port:</div>
+                    <div class="detail-value" id="detail-port">80</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Hostnames:</div>
+                    <div class="detail-value" id="detail-hostnames">None</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Domains:</div>
+                    <div class="detail-value" id="detail-domains">None</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Organization:</div>
+                    <div class="detail-value" id="detail-org">Unknown</div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+                <div class="detail-row">
+                    <div class="detail-label">Country:</div>
+                    <div class="detail-value" id="detail-country">United States</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">City:</div>
+                    <div class="detail-value" id="detail-city">New York</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Coordinates:</div>
+                    <div class="detail-value" id="detail-coords">40.7128, -74.0060</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">ISP:</div>
+                    <div class="detail-value" id="detail-isp">Comcast</div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3><i class="fas fa-cogs"></i> Service Details</h3>
+                <div class="detail-row">
+                    <div class="detail-label">Product:</div>
+                    <div class="detail-value" id="detail-product">Apache</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Version:</div>
+                    <div class="detail-value" id="detail-version">2.4.41</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Protocol:</div>
+                    <div class="detail-value" id="detail-protocol">HTTP</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Banner:</div>
+                    <div class="detail-value" id="detail-banner">HTTP/1.1 200 OK</div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3><i class="fas fa-shield-alt"></i> Security</h3>
+                <div class="detail-row">
+                    <div class="detail-label">Vulnerabilities:</div>
+                    <div class="detail-value" id="detail-vulns">None detected</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">SSL/TLS:</div>
+                    <div class="detail-value" id="detail-ssl">Not detected</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">HTTP Headers:</div>
+                    <div class="detail-value" id="detail-headers">Server: Apache/2.4.41</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Shodan Data Explorer v1.0 • Securely analyze your Shodan scan results</p>
+    </footer>
+
+    <script>
+        // Sample Shodan data for demo
+        const sampleData = [
+            {
+                "ip_str": "192.168.1.105",
+                "port": 80,
+                "product": "Apache httpd",
+                "version": "2.4.41",
+                "http": {
+                    "title": "Welcome to Apache"
+                },
+                "vulns": ["CVE-2021-41773"],
+                "location": {
+                    "country_name": "United States",
+                    "city": "New York",
+                    "latitude": 40.7128,
+                    "longitude": -74.0060
+                },
+                "domains": ["example.com"],
+                "hostnames": ["server1.example.com"],
+                "data": "HTTP/1.1 200 OK\r\nServer: Apache/2.4.41\r\n\r\n<html>...</html>"
+            },
+            {
+                "ip_str": "10.0.34.27",
+                "port": 22,
+                "product": "OpenSSH",
+                "version": "8.2p1",
+                "vulns": [],
+                "location": {
+                    "country_name": "Germany",
+                    "city": "Berlin",
+                    "latitude": 52.5200,
+                    "longitude": 13.4050
+                },
+                "data": "SSH-2.0-OpenSSH_8.2p1"
+            },
+            {
+                "ip_str": "172.217.16.142",
+                "port": 443,
+                "product": "nginx",
+                "version": "1.18.0",
+                "ssl": {
+                    "cert": "Valid certificate"
+                },
+                "vulns": ["CVE-2021-23017"],
+                "location": {
+                    "country_name": "United States",
+                    "city": "Mountain View",
+                    "latitude": 37.3861,
+                    "longitude": -122.0839
+                },
+                "domains": ["google.com"],
+                "data": "HTTP/2 200\r\nserver: nginx/1.18.0\r\n\r\n..."
+            },
+            {
+                "ip_str": "203.0.113.45",
+                "port": 3306,
+                "product": "MySQL",
+                "version": "5.7.32",
+                "vulns": ["CVE-2020-14812"],
+                "location": {
+                    "country_name": "Japan",
+                    "city": "Tokyo",
+                    "latitude": 35.6895,
+                    "longitude": 139.6917
+                },
+                "data": "MySQL server"
+            },
+            {
+                "ip_str": "198.51.100.22",
+                "port": 3389,
+                "product": "Microsoft Terminal Services",
+                "version": "",
+                "vulns": ["CVE-2019-0708"],
+                "location": {
+                    "country_name": "United Kingdom",
+                    "city": "London",
+                    "latitude": 51.5074,
+                    "longitude": -0.1278
+                },
+                "data": "RDP connection"
+            },
+            {
+                "ip_str": "203.0.113.78",
+                "port": 8080,
+                "product": "Tomcat",
+                "version": "9.0.41",
+                "http": {
+                    "title": "Apache Tomcat"
+                },
+                "vulns": ["CVE-2020-1938"],
+                "location": {
+                    "country_name": "France",
+                    "city": "Paris",
+                    "latitude": 48.8566,
+                    "longitude": 2.3522
+                },
+                "data": "HTTP/1.1 200 OK\r\nServer: Apache Tomcat/9.0.41\r\n\r\n..."
+            },
+            {
+                "ip_str": "192.0.2.15",
+                "port": 21,
+                "product": "ProFTPD",
+                "version": "1.3.5",
+                "vulns": ["CVE-2010-4221"],
+                "location": {
+                    "country_name": "Canada",
+                    "city": "Toronto",
+                    "latitude": 43.6532,
+                    "longitude": -79.3832
+                },
+                "data": "220 ProFTPD 1.3.5 Server"
+            }
+        ];
+
+        // Global state
+        let shodanData = [];
+        let filteredData = [];
+        let countries = new Set();
+        let uniquePorts = new Set();
+        let vulnerabilities = new Set();
+        let products = new Set();
+
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const loader = document.getElementById('loader');
+        const noData = document.getElementById('no-data');
+        const resultsTable = document.getElementById('results-table');
+        const resultsBody = document.getElementById('results-body');
+        const globalSearch = document.getElementById('global-search');
+        const detailView = document.getElementById('detail-view');
+        const closeDetail = document.getElementById('close-detail');
+        const applyFiltersBtn = document.getElementById('apply-filters');
+        const resetFiltersBtn = document.getElementById('reset-filters');
+        const exportCsvBtn = document.getElementById('export-csv');
+        const exportJsonBtn = document.getElementById('export-json');
+
+        // Filter elements
+        const filterElements = {
+            ip: document.getElementById('filter-ip'),
+            port: document.getElementById('filter-port'),
+            product: document.getElementById('filter-product'),
+            vuln: document.getElementById('filter-vuln'),
+            country: document.getElementById('filter-country'),
+            city: document.getElementById('filter-city')
+        };
+
+        // Stats cards
+        const cardHosts = document.getElementById('card-hosts');
+        const cardPorts = document.getElementById('card-ports');
+        const cardVulns = document.getElementById('card-vulns');
+        const cardCountries = document.getElementById('card-countries');
+
+        // Insight elements
+        const insightHttp = document.getElementById('insight-http');
+        const insightSsl = document.getElementById('insight-ssl');
+        const insightVuln = document.getElementById('insight-vuln');
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            // For demo purposes, load sample data
+            loadData(sampleData);
+
+            // Set up event listeners
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // File upload
+            dropZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileUpload);
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#6366f1';
+                dropZone.style.backgroundColor = 'rgba(99, 102, 241, 0.05)';
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.style.borderColor = '#334155';
+                dropZone.style.backgroundColor = '';
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#334155';
+                dropZone.style.backgroundColor = '';
+
+                const files = e.dataTransfer.files;
+                if (files.length) {
+                    handleFiles(files);
+                }
+            });
+
+            // Search and filters
+            globalSearch.addEventListener('input', applyFilters);
+            applyFiltersBtn.addEventListener('click', applyFilters);
+            resetFiltersBtn.addEventListener('click', resetFilters);
+
+            // Export buttons
+            exportCsvBtn.addEventListener('click', exportToCsv);
+            exportJsonBtn.addEventListener('click', exportToJson);
+
+            // Detail view
+            closeDetail.addEventListener('click', () => {
+                detailView.classList.remove('active');
+            });
+        }
+
+        function handleFiles(files) {
+            const jsonFiles = Array.from(files).filter(file =>
+                file.type === 'application/json' || file.name.endsWith('.json')
+            );
+
+            if (jsonFiles.length === 0) {
+                alert('Please select JSON files generated by Shodan CLI');
+                return;
+            }
+
+            // Show loader
+            loader.style.display = 'block';
+            noData.style.display = 'none';
+            resultsTable.style.display = 'none';
+
+            // Process files
+            const fileReadPromises = jsonFiles.map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+                        try {
+                            // Shodan uses ndjson (newline-delimited JSON)
+                            const lines = e.target.result.split('\n');
+                            const jsonData = lines
+                                .filter(line => line.trim() !== '')
+                                .map(line => JSON.parse(line));
+
+                            resolve(jsonData);
+                        } catch (error) {
+                            console.error('Error parsing JSON:', error);
+                            reject(`Error parsing ${file.name}: ${error.message}`);
+                        }
+                    };
+
+                    reader.onerror = function() {
+                        reject(`Error reading file: ${file.name}`);
+                    };
+
+                    reader.readAsText(file);
+                });
+            });
+
+            // Process all files
+            Promise.all(fileReadPromises)
+                .then(results => {
+                    // Flatten the array of arrays
+                    const allData = results.flat();
+                    loadData(allData);
+                })
+                .catch(error => {
+                    alert(error);
+                    loader.style.display = 'none';
+                    noData.style.display = 'block';
+                });
+        }
+
+        function loadData(data) {
+            shodanData = data;
+
+            // Reset filters
+            resetFilters();
+
+            // Update stats
+            updateStats();
+
+            // Hide loader and show table
+            loader.style.display = 'none';
+            noData.style.display = 'none';
+            resultsTable.style.display = 'table';
+
+            // Render the table
+            renderTable();
+        }
+
+        function updateStats() {
+            // Reset sets
+            countries.clear();
+            uniquePorts.clear();
+            vulnerabilities.clear();
+            products.clear();
+
+            let httpCount = 0;
+            let sslCount = 0;
+            let vulnCount = 0;
+
+            shodanData.forEach(item => {
+                // Collect countries
+                if (item.location && item.location.country_name) {
+                    countries.add(item.location.country_name);
+                }
+
+                // Collect ports
+                uniquePorts.add(item.port);
+
+                // Collect vulnerabilities
+                if (item.vulns && item.vulns.length > 0) {
+                    vulnCount++;
+                    item.vulns.forEach(v => vulnerabilities.add(v));
+                }
+
+                // Collect products
+                if (item.product) {
+                    products.add(item.product);
+                }
+
+                // Check for HTTP
+                if (item.port === 80 || item.port === 8080 || item.port === 8000 ||
+                    (item.http && Object.keys(item.http).length > 0)) {
+                    httpCount++;
+                }
+
+                // Check for SSL
+                if (item.port === 443 || item.ssl) {
+                    sslCount++;
+                }
+            });
+
+            // Update card values
+            cardHosts.textContent = shodanData.length;
+            cardPorts.textContent = uniquePorts.size;
+            cardVulns.textContent = vulnerabilities.size;
+            cardCountries.textContent = countries.size;
+
+            // Update insights
+            insightHttp.textContent = httpCount;
+            insightSsl.textContent = sslCount;
+            insightVuln.textContent = vulnCount;
+
+            // Populate country filter
+            const countrySelect = filterElements.country;
+            countrySelect.innerHTML = '<option value="">All Countries</option>';
+
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                countrySelect.appendChild(option);
+            });
+        }
+
+        function renderTable() {
+            resultsBody.innerHTML = '';
+
+            const startIdx = 0;
+            const endIdx = Math.min(startIdx + 100, filteredData.length);
+            const pageData = filteredData.slice(startIdx, endIdx);
+
+            if (pageData.length === 0) {
+                resultsBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem;">
+                            No results match your filters
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            pageData.forEach(item => {
+                const row = document.createElement('tr');
+
+                // Determine status
+                let statusClass = 'status-open';
+                let statusText = 'Open';
+
+                if (item.vulns && item.vulns.length > 0) {
+                    statusClass = 'status-vulnerable';
+                    statusText = 'Vulnerable';
+                } else if (item.port === 22 || item.port === 3389) {
+                    statusClass = 'status-warning';
+                    statusText = 'Warning';
+                }
+
+                // Location
+                let location = 'Unknown';
+                if (item.location) {
+                    location = item.location.city ?
+                        `${item.location.city}, ${item.location.country_name}` :
+                        item.location.country_name;
+                }
+
+                // Product
+                let product = item.product || 'Unknown';
+                if (item.version) {
+                    product += ` ${item.version}`;
+                }
+
+                row.innerHTML = `
+                    <td>${item.ip_str}</td>
+                    <td>${item.port} (${getProtocol(item.port)})</td>
+                    <td>${location}</td>
+                    <td>${product}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="action-btn view-detail" data-id="${item.ip_str}:${item.port}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </td>
+                `;
+
+                resultsBody.appendChild(row);
+            });
+
+            // Add event listeners to detail buttons
+            document.querySelectorAll('.view-detail').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const [ip, port] = btn.dataset.id.split(':');
+                    showDetail(ip, parseInt(port));
+                });
+            });
+        }
+
+        function getProtocol(port) {
+            switch(port) {
+                case 80: return 'HTTP';
+                case 443: return 'HTTPS';
+                case 22: return 'SSH';
+                case 21: return 'FTP';
+                case 25: return 'SMTP';
+                case 3306: return 'MySQL';
+                case 3389: return 'RDP';
+                case 8080: return 'HTTP';
+                default: return 'TCP';
+            }
+        }
+
+        function showDetail(ip, port) {
+            const item = shodanData.find(i => i.ip_str === ip && i.port === port);
+            if (!item) return;
+
+            // Update detail view
+            document.getElementById('detail-ip').textContent = item.ip_str;
+            document.getElementById('detail-port').textContent = item.port;
+            document.getElementById('detail-hostnames').textContent =
+                item.hostnames ? item.hostnames.join(', ') : 'None';
+            document.getElementById('detail-domains').textContent =
+                item.domains ? item.domains.join(', ') : 'None';
+            document.getElementById('detail-org').textContent =
+                item.org || item.isp || 'Unknown';
+
+            if (item.location) {
+                document.getElementById('detail-country').textContent =
+                    item.location.country_name || 'Unknown';
+                document.getElementById('detail-city').textContent =
+                    item.location.city || 'Unknown';
+                document.getElementById('detail-coords').textContent =
+                    item.location.latitude && item.location.longitude ?
+                    `${item.location.latitude}, ${item.location.longitude}` : 'Unknown';
+                document.getElementById('detail-isp').textContent =
+                    item.isp || 'Unknown';
+            } else {
+                document.getElementById('detail-country').textContent = 'Unknown';
+                document.getElementById('detail-city').textContent = 'Unknown';
+                document.getElementById('detail-coords').textContent = 'Unknown';
+                document.getElementById('detail-isp').textContent = 'Unknown';
+            }
+
+            document.getElementById('detail-product').textContent =
+                item.product || 'Unknown';
+            document.getElementById('detail-version').textContent =
+                item.version || 'Unknown';
+            document.getElementById('detail-protocol').textContent =
+                getProtocol(item.port);
+            document.getElementById('detail-banner').textContent =
+                item.data ? item.data.substring(0, 100) + (item.data.length > 100 ? '...' : '') : 'No banner';
+
+            if (item.vulns && item.vulns.length > 0) {
+                document.getElementById('detail-vulns').textContent =
+                    item.vulns.join(', ');
+            } else {
+                document.getElementById('detail-vulns').textContent = 'None detected';
+            }
+
+            document.getElementById('detail-ssl').textContent =
+                item.ssl ? 'Detected' : 'Not detected';
+
+            let httpHeaders = 'No headers';
+            if (item.http && item.http.headers) {
+                httpHeaders = Object.entries(item.http.headers)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join('\n');
+            }
+            document.getElementById('detail-headers').textContent = httpHeaders;
+
+            // Show the detail view
+            detailView.classList.add('active');
+        }
+
+        function applyFilters() {
+            const searchTerm = globalSearch.value.toLowerCase();
+            const ipFilter = filterElements.ip.value.toLowerCase();
+            const portFilter = filterElements.port.value;
+            const productFilter = filterElements.product.value.toLowerCase();
+            const vulnFilter = filterElements.vuln.value.toLowerCase();
+            const countryFilter = filterElements.country.value;
+            const cityFilter = filterElements.city.value.toLowerCase();
+
+            filteredData = shodanData.filter(item => {
+                // Global search
+                if (searchTerm) {
+                    const searchFields = [
+                        item.ip_str,
+                        item.port.toString(),
+                        item.product,
+                        item.version,
+                        ...(item.hostnames || []),
+                        ...(item.domains || []),
+                        ...(item.vulns || []),
+                        ...(item.location ? [item.location.country_name, item.location.city] : [])
+                    ].filter(Boolean).join(' ').toLowerCase();
+
+                    if (!searchFields.includes(searchTerm)) {
+                        return false;
+                    }
+                }
+
+                // IP filter
+                if (ipFilter && !item.ip_str.includes(ipFilter)) {
+                    return false;
+                }
+
+                // Port filter
+                if (portFilter && item.port !== parseInt(portFilter)) {
+                    return false;
+                }
+
+                // Product filter
+                if (productFilter) {
+                    const product = (item.product || '').toLowerCase();
+                    if (!product.includes(productFilter)) {
+                        return false;
+                    }
+                }
+
+                // Vulnerability filter
+                if (vulnFilter) {
+                    if (!item.vulns || !item.vulns.some(v => v.toLowerCase().includes(vulnFilter))) {
+                        return false;
+                    }
+                }
+
+                // Country filter
+                if (countryFilter && (!item.location || item.location.country_name !== countryFilter)) {
+                    return false;
+                }
+
+                // City filter
+                if (cityFilter && (!item.location || !item.location.city || !item.location.city.toLowerCase().includes(cityFilter))) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            renderTable();
+        }
+
+        function resetFilters() {
+            // Reset filter inputs
+            globalSearch.value = '';
+            filterElements.ip.value = '';
+            filterElements.port.value = '';
+            filterElements.product.value = '';
+            filterElements.vuln.value = '';
+            filterElements.country.value = '';
+            filterElements.city.value = '';
+
+            // Reset filtered data
+            filteredData = [...shodanData];
+
+            // Re-render table
+            if (shodanData.length > 0) {
+                renderTable();
+            }
+        }
+
+        function exportToCsv() {
+            if (filteredData.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            // Create CSV content
+            const headers = ['IP Address', 'Port', 'Country', 'City', 'Product', 'Version', 'Vulnerabilities'];
+            const rows = filteredData.map(item => {
+                return [
+                    `"${item.ip_str}"`,
+                    item.port,
+                    item.location?.country_name || '',
+                    item.location?.city || '',
+                    item.product || '',
+                    item.version || '',
+                    item.vulns ? item.vulns.join(';') : ''
+                ].join(',');
+            });
+
+            const csvContent = [headers.join(','), ...rows].join('\n');
+
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'shodan_data.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToJson() {
+            if (filteredData.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const jsonContent = JSON.stringify(filteredData, null, 2);
+            const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'shodan_data.json');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function handleFileUpload() {
+            if (fileInput.files.length) {
+                handleFiles(fileInput.files);
+            }
+        }
+    </script>
+</body>
+</html>
