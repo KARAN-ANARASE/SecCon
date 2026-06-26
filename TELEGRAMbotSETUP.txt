@@ -1,0 +1,103 @@
+https://colab.research.google.com/
+
+1:  |
+`````
+import sys
+
+# Remove every cached telegram-related module from this running process
+for mod in list(sys.modules):
+    if mod == "telegram" or mod.startswith("telegram."):
+        del sys.modules[mod]
+
+!rm -rf /usr/local/lib/python3.12/dist-packages/telegram*
+!pip install --no-cache-dir --force-reinstall "python-telegram-bot==22.8"
+
+import importlib
+import telegram
+importlib.reload(telegram)
+print(telegram.__version__)
+
+```````````````
+Restart Session
+```````````````
+
+
+2:
+```````````
+!pip install --no-cache-dir --force-reinstall "APScheduler==3.10.4"
+
+import importlib
+import apscheduler
+importlib.reload(apscheduler)
+print(apscheduler.__version__)
+
+```````````````
+Restart Session
+```````````````
+
+3:
+```````````
+%%writefile recon_bot.py
+import re
+import asyncio
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+ 
+BOT_TOKEN = "TOKEN"    <------Replace token at here
+ 
+HOSTNAME_RE = re.compile(r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*$")
+ 
+ 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Welcome {}".format(update.effective_user.first_name))
+ 
+ 
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    target = update.message.text.strip()
+    
+    if not HOSTNAME_RE.match(target):
+        await update.message.reply_text("Invalid hostname/IP.")
+        return
+        
+    try:
+        # Replaces subprocess.run non-blockingly with a 10 second timeout
+        proc = await asyncio.wait_for(
+            asyncio.create_subprocess_exec(
+                "host", "-t", "a", target,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            ),
+            timeout=10.0
+        )
+        
+        # Non-blocking wait for stdout data
+        stdout, _ = await proc.communicate()
+        out = stdout.decode().strip()
+        
+        await update.message.reply_text(out[:3500] or "(no output)")
+        
+    except asyncio.TimeoutError:
+        await update.message.reply_text("Error: Command timed out after 10 seconds.")
+    except Exception as e:
+        await update.message.reply_text(f"An unexpected error occurred: {str(e)}")
+ 
+ 
+if __name__ == '__main__':
+    app = Application.builder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+    app.run_polling()
+
+ ```````````````
+
+
+
+4:
+``````````````
+!python3 recon_bot.py 
+
+----- OR --------
+
+!nohup python3 recon_bot.py > bot.log 2>&1 &
+
+``````````````
