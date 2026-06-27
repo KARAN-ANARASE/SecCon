@@ -43,7 +43,7 @@ import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
  
-BOT_TOKEN = "TOKEN"    <------Replace token at here
+BOT_TOKEN = "TOKEN"    #<------Replace token at here
  
 HOSTNAME_RE = re.compile(r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*$")
  
