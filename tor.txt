@@ -1,0 +1,67 @@
+$ sudo apt install tor privoxy
+
+configure pivoxy for TOR
+
+$ sudo vim /etc/privoxy/config
+search for = 127.0.0.1:9050 uncomment it
+line n.o:1456
+:wq
+
+$ systemctl restart tor privoxy
+
+tor take time for circute building.
+
+Configure browser for privoxy
+browser -> settings -> proxy -> manual ->
+127.0.0.1 port = 8118
+SOCKS5 = 127.0.0.1 Port: 8118
+
+$ sudo systemctl restart tor privoxy
+
+to set the entry and exit node restriction for TOR
+
+$ sudo vim /etc/tor/torrc
+
+go to end of the file add new entry
+
+EntryNodes {pk},{sg},{de},{nl},{fr},{se}
+ExitNodes {pk},{sg},{de},{nl},{fr},{se}
+StrictNodes 1
+MaxCircuitDirtiness 2
+:wq
+
+web hosting on dark-web
+Darkweb TLD: Onion
+
+$ sudo vim /etc/tor/torrc
+search /HiddenService
+
+HiddenServiceDir } uncomment it
+HiddenServicePort } uncomment it
+
+:wq
+
+$ cd ~
+$ mkdir -p darkwww
+$cd darkwww
+$ vim index.html
+   <h1>This is dark web</h1>
+
+$ sudo python3 -m http.server --bind 127.0.0.1 80
+
+on new terminal
+$ sudo systemctl restart tor
+
+$ sudo su
+
+$cd /var/lib/tor/hiddenservice$ cat hostname
+--------.onion <- is hostname
+
+on firefox open that hostname
+
+Open your .onion domain in windows
+
+https://www.torproject.org/download/
+
+download browser from here
+open tor->connect->enter domain in url->good to go.
