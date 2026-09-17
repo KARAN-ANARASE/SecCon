@@ -65,3 +65,34 @@ https://www.torproject.org/download/
 
 download browser from here
 open tor->connect->enter domain in url->good to go.
+
++-#-+ Take SSH by using .onion SERVER setup +-#-+
+**on tor servers kali machine**
+$ sudo vim /etc/tor/torrc
+HiddenServicePort 80 127.0.0.1:80
+HiddenServicePort 22 127.0.0.1:22 }--- add this line for enable ssh through .onion
+
+:wq
+
+$ sudo systemctl restart ssh
+$ sudo systemctl enable ssh
+$ sudo systemctl restart tor
+
+### on client any LINUX machine ###
+$ sudo apt update
+$ sudo apt install tor torsocks -y
+$ sudo systemctl restart tor
+$ sudo systemctl enable tor
+
+$ torsocks ssh username@tordomain.onion 
+
+### Take SSH by using .onion on client WINDOWS machine ###
+[+] + R -> cmd
+$ wsl --install
+$ wsl
+$ sudo apt update
+$ sudo apt install tor torsocks -y
+$ sudo systemctl restart tor
+$ sudo systemctl enable tor
+
+$ torsocks ssh username@tordomain.onion 
