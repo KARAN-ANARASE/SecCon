@@ -96,3 +96,32 @@ $ sudo systemctl restart tor
 $ sudo systemctl enable tor
 
 $ torsocks ssh username@tordomain.onion 
+
+### Take RDP by using .onion SERVER setup ###
+$ sudo systemctl install xrdp -y
+
+$ sudo vim /etc/tor/torrc
+HiddenServicePort 80 127.0.0.1:80
+HiddenServicePort 22 127.0.0.1:22
+HiddenServicePort 3389 127.0.0.1:3389 }--- add this line for enable RDP through .onion
+:wq
+
+$ sudo systemctl restart xrdp
+$ sudo systemctl enable xrdp
+$ sudo systemctl restart tor
+$ sudo reboot }--- Now don't do login otherwise it is not able to create connection 
+
+### Two ways to take RDP of kali on Windows ###
+### 1. socat => Come on Windows machine   }--- good to go ---
+[+] + R -> cmd 
+$ wsl
+$ sudo apt update -y && sudo apt upgrade -y
+$ sudo apt install socat -y
+$ socat TCP-LISTEN:13389,fork,reuseaddr SOCKS4A:127.0.0.1:tordomain.onion:3389,socksport=9050   }--keep this tab open now
+[+] + R -> mstsc -> 127.0.0.1:13389 -> connect -> yes 
+
+### 2. xfreerdp => come on Windows machine    
+[+] + R -> cmd
+$ wsl
+$ sudo apt install freerdp3-x11 -y
+$ torsocks xfreerdp /v:tordomain.onion:3389 /u:username   
