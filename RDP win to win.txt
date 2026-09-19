@@ -1,0 +1,36 @@
+### Take RDP of windows 10 to Windows OS ### }-- windows 11 home edition not support RDP
+
+### Come on Windows 10 RDP server setup ###
+[+] + R -> cmd 
+$ wsl
+$ sudo apt install tor xrdp -y
+$ ip route | grep default     }-- we need windows ip not wsl and this command shows that ip
+  #default via 172.23.1.1 dev eth0 proto kernel#
+$ sudo vim /etc/tor/torrc
+
+HiddenServiceDir /var/lib/tor/hidden_service/
+HiddenServicePort 80 127.0.0.1:80
+HiddenServicePort 3389 172.23.1.1:3389     }-- use above ip here and uncomment those lines
+HiddenServicePort 22 127.0.0.1:22
+
+:wq
+
+$ sudo systemctl restart tor
+$ sudo systemctl stop xrdp
+$ sudo systemctl stop xrdp-sesman }-- we need windows connection not wsl that`s why
+$ ss -lntp | grep 3389   }-- It should return nothing.
+[+] + R -> cmd
+$ netstat -ano | findstr :3389 }-- have to show LISTENING and come on wsl tab
+$ sudo cat /var/lib/tor/hidden_service/hostname
+
+### Come on Windows Client machine ###
+[+] + R ->cmd
+$ wsl
+$ sudo apt install tor torsocks xrdp socat -y
+$ sudo restart tor
+$ socat TCP-LISTEN:13389,fork,reuseaddr SOCKS4A:127.0.0.1:tordomain.onion:3389,socksport=9050
+[+] + R -> mstsc
+> 127.0.0.1:13389
+username
+password
+good to go...
