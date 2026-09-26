@@ -1,0 +1,16 @@
+### Access tor server machines terminal through tor domain on tor browser ###
+$ sudo adduser webterminal 
+$ sudo apt update
+$ sudo apt install -y cmake libjson-c-dev libwebsockets-dev libssl-dev zlib1g-dev git
+$ cd ~
+$ git clone --depth 1 --branch 1.7.7 https://github.com/tsl0922/ttyd.git
+$ cd ttyd
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make -j"$(nproc)"
+$ sudo make install
+$ ttyd --version
+$ ttyd -W -p 7681 -i 127.0.0.1 -t rendererType=dom bash      }--without password
+$ ttyd -W -p 7681 -i 127.0.0.1 -t rendererType=dom -c webterminal:YOUR_PASSWORD bash }-- with password
+Now open tor domain in tor and good to go...
